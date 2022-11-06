@@ -1,0 +1,32 @@
+include misc/Tool-UI/mixins.pug
+head
+	meta(charset='UTF-8')
+	title Flattener
+	link(rel='stylesheet' href='misc/Tool-UI/tool-ui.css')
+	link(rel='stylesheet' href='style.css')
+	script(type='text/javascript' src='https://unpkg.com/acorn')
+	script(type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.11/paper-full.min.js')
+	
+
+body
+	
+	.ui-panel
+		.ui-section
+			+header('Lines')
+			.ui-component
+				+field('lineWidthThreshold', 'Line expand threshold', 1, 'number', 0, 100)
+
+		.ui-section
+			+header('Project')
+			+button('log-project', 'Log project', '')
+			+button('export-button', 'Export as SVG', '')
+	
+	canvas#canvas(resize='')
+
+	#pathTarget Drop path SVG file here.
+
+	script(type='text/javascript' canvas='canvas' src='misc/filesaver/FileSaver.js')
+	script(type='text/javascript' src='misc/paperjs-offset.min.js')
+	script(type='text/javascript' canvas='canvas' src='misc/utility.js')
+	script(type='text/paperscript' canvas='canvas' src='flattener.js')
+	script(type='text/javascript' src='misc/Tool-UI/tool-ui.js')

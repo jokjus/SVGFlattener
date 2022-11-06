@@ -1,0 +1,38 @@
+// UI-components
+mixin input(myid, label, value, type, min=0, max=100)
+	//- - var inputID = myid + '-input';
+	- var valueID = myid + '-value';
+	- var compID = myid + '-comp';
+
+	.ui-component(id=compID)
+		label=label
+			span.ui-value(id=valueID)
+		if type=='range'
+			input(type=type, value=value, min=min, max=max, data-input=myid, id=myid)
+		if type=='color'
+			input(type=type, value=value, id=myid)
+		if type=='checkbox'
+			if value==true
+				input(type=type, id=myid, checked)
+			if value==false
+				input(type=type, id=myid)
+		if type=='text'
+			input(type='text', value=value, id=myid)
+		
+
+mixin button(myid, label, value)
+	.ui-component(id=myid)
+		button=label
+
+
+
+mixin field(myid, label, value, type, min=0, max=100)
+	.ui-field
+		label=label
+		input(type=type, value=value, id=myid, min=min, max=max)
+
+mixin header(label, checkbox)
+	header
+		h2.ui-section-header=label
+		if checkbox
+			input(type='checkbox')
