@@ -17,37 +17,79 @@ var resultLayer = new Layer({
 
 
 // Recursively ungroup the SVG
-function ungroup() {
+function ungroup(item) {
 
 	flag = true
 
-	for (var i = 0; i < drawingLayer.children.length; i++) {
-		var el = drawingLayer.children[i]
+	for (var i = 0; i < item.children.length; i++) {
+		var el = item.children[i]
 
 		if (el.hasChildren()) {
+			
+			// Have to deal with clipping groups first
+			if (el.clipped) flattenClipping(el)
+
 			el.parent.insertChildren(el.index, el.removeChildren())
 			el.remove()
 			flag = false
 		}
-	}
 
-	if (!flag) {
-		ungroup()
-    }
+		// Recurse as long as there are groups left
+		if (!flag) {
+			ungroup(item)
+		}
+	}
 }
+
+// Flattens a clipping group
+function flattenClipping(clipGroup) {
+
+	// Ungroup everything inside a clipping group
+	ungroup(clipGroup)
+
+	// Find the clipping mask (it should be the first layer but cannot be certain)
+	var clipMask = clipGroup.children.filter(obj => {
+		return obj.clipMask === true
+	})
+
+	// Close clipping mask for more predicatable results
+	if (clipMask[0].closed == false) clipMask[0].closePath()
+	
+	// Get the actual clipped layers
+	var innerLayers = clipGroup.children.filter(obj => {
+		return obj.clipMask === false
+	})
+ 
+
+	// Loop through clipped layers and get the boolean intersection against clone of the clipping mask
+	for (var x = 0; x < innerLayers.length; x++) {
+		var inner = innerLayers[x]
+		var mask = clipMask[0].clone()
+		var newEl = inner.intersect(mask)
+
+		// If there are more than one resulting item, they are forced to have color so that later boolean operations will work
+		if (newEl.hasChildren()) {
+			newEl.children.forEach(el => el.fillColor = 'black')
+		}
+
+		// clean up
+		mask.remove()
+		inner.remove()
+	}
+	
+	
+	// ungroup(innerLayers)
+
+	//clean up
+	clipMask[0].remove()
+	clipGroup.clipped = false
+
+}
+
 
 
 function render() {
 	var elCount = drawingLayer.children.length
-
-	// var progressInd = new PointText({
-	// 	point: view.center,
-	// 	justification: 'center',
-	// 	fillColor: 'blue',
-	// 	fontSize: 12,
-	// 	content: 'indicator',
-	// 	parent: resultLayer
-	// })
 
 	// create a dummy path
 	 var b = new Path({
@@ -61,7 +103,7 @@ function render() {
 	for (var x = elCount - 1; x >= 0; x-- ) {
 		
 		console.log('processed: ' + (elCount - x) + ' of ' + elCount)
-		// progressInd.content = (elCount - x) + ' of ' + elCount
+
 		// take a clone of a current sprite
 		var el = drawingLayer.children[x]
 		
@@ -125,17 +167,6 @@ function render() {
 	resultLayer.reverseChildren()
 }
 
-// function processOne() {
-
-// }
-
-// function onFrame() {
-// 	if (processing) {
-//		processOne()
-// 	}
-
-// }
-
 
 // UI listeners ================================================
 addListener('lineWidthThreshold')
@@ -193,7 +224,8 @@ function onDocumentDrop(event) {
 				//let's ungroup imported SVG for easier access. Now paths are bare at words layer.
 				pathImg.parent.insertChildren(pathImg.index,  pathImg.removeChildren())
 				pathImg.remove()
-				ungroup()
+				// flattenClipping(drawingLayer)
+				ungroup(drawingLayer)
 				render()
 			})
 		}
