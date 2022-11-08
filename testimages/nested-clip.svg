@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.4.8, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 612 792" style="enable-background:new 0 0 612 792;" xml:space="preserve">
+<style type="text/css">
+	.st0{clip-path:url(#SVGID_00000167376439344116988850000002497865445521910181_);fill:#E60F71;}
+	.st1{clip-path:url(#SVGID_00000167376439344116988850000002497865445521910181_);fill:#252569;}
+	.st2{clip-path:url(#SVGID_00000167376439344116988850000002497865445521910181_);fill:#00743C;}
+	.st3{clip-path:url(#SVGID_00000167376439344116988850000002497865445521910181_);}
+	.st4{clip-path:url(#SVGID_00000130645976013954177830000001839172950092519614_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+</style>
+<g>
+	<defs>
+		<rect id="SVGID_1_" x="111" y="129" width="400" height="302"/>
+	</defs>
+	<clipPath id="SVGID_00000047778604116386872180000011514865309470190760_">
+		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+	</clipPath>
+	
+		<circle style="clip-path:url(#SVGID_00000047778604116386872180000011514865309470190760_);fill:#E60F71;" cx="166.7" cy="286.2" r="105.7"/>
+	
+		<circle style="clip-path:url(#SVGID_00000047778604116386872180000011514865309470190760_);fill:#252569;" cx="282.1" cy="363.1" r="105.7"/>
+	
+		<circle style="clip-path:url(#SVGID_00000047778604116386872180000011514865309470190760_);fill:#00743C;" cx="326.9" cy="186.9" r="105.7"/>
+	<g style="clip-path:url(#SVGID_00000047778604116386872180000011514865309470190760_);">
+		<defs>
+			<circle id="SVGID_00000165956025311362944840000015827765061751983782_" cx="455.1" cy="270.2" r="100.9"/>
+		</defs>
+		<clipPath id="SVGID_00000061434098762489081600000009821166555503729558_">
+			<use xlink:href="#SVGID_00000165956025311362944840000015827765061751983782_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<line style="clip-path:url(#SVGID_00000061434098762489081600000009821166555503729558_);fill:none;stroke:#000000;stroke-miterlimit:10;" x1="259.6" y1="129.2" x2="708.2" y2="214.5"/>
+		
+			<line style="clip-path:url(#SVGID_00000061434098762489081600000009821166555503729558_);fill:none;stroke:#000000;stroke-miterlimit:10;" x1="259.6" y1="170.9" x2="708.2" y2="256.2"/>
+		
+			<line style="clip-path:url(#SVGID_00000061434098762489081600000009821166555503729558_);fill:none;stroke:#000000;stroke-miterlimit:10;" x1="259.6" y1="212.5" x2="708.2" y2="297.8"/>
+		
+			<line style="clip-path:url(#SVGID_00000061434098762489081600000009821166555503729558_);fill:none;stroke:#000000;stroke-miterlimit:10;" x1="259.6" y1="254.2" x2="708.2" y2="339.5"/>
+		
+			<line style="clip-path:url(#SVGID_00000061434098762489081600000009821166555503729558_);fill:none;stroke:#000000;stroke-miterlimit:10;" x1="259.6" y1="295.8" x2="708.2" y2="381.1"/>
+		
+			<line style="clip-path:url(#SVGID_00000061434098762489081600000009821166555503729558_);fill:none;stroke:#000000;stroke-miterlimit:10;" x1="259.6" y1="337.5" x2="708.2" y2="422.8"/>
+	</g>
+</g>
+</svg>

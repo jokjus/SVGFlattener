@@ -4,7 +4,8 @@
 // Requires ungrouping svg first
 
 var c = {
-	lineWidthThreshold: 1
+	lineWidthThreshold: 1,
+	originalColors: false
 }
 
 var drawingLayer = new Layer({
@@ -48,24 +49,51 @@ function flattenClipping(clipGroup) {
 	ungroup(clipGroup)
 
 	// Find the clipping mask (it should be the first layer but cannot be certain)
-	var clipMask = clipGroup.children.filter(obj => {
+	var clipMasks = clipGroup.children.filter(obj => {
 		return obj.clipMask === true
 	})
 
+	var clipMaskOrig = clipMasks[0]
+
+	// if clipmask element is a shape, let's convert to a path first
+	// this is ugly but didn't yet find other way to prevent extra elements from generating
+	if (clipMaskOrig.type != undefined) {
+		var clipMask = clipMaskOrig.toPath()		
+	}
+	else  {
+		var clipMask = clipMaskOrig
+	}
+
 	// Close clipping mask for more predicatable results
-	if (clipMask[0].closed == false) clipMask[0].closePath()
+	if (clipMask.closed == false) clipMask.closePath()
 	
 	// Get the actual clipped layers
 	var innerLayers = clipGroup.children.filter(obj => {
 		return obj.clipMask === false
 	})
- 
+
+	
 
 	// Loop through clipped layers and get the boolean intersection against clone of the clipping mask
 	for (var x = 0; x < innerLayers.length; x++) {
-		var inner = innerLayers[x]
-		var mask = clipMask[0].clone()
-		var newEl = inner.intersect(mask)
+		var innerOrig = innerLayers[x]
+		var mask = clipMask.clone()
+
+		// if inner element is a shape, let's convert to a path first
+		// this is ugly but didn't yet find other way to prevent extra elements from generating
+		if (innerOrig.type != undefined) {
+			var inner = innerOrig.toPath()	
+		}
+		else {
+			var inner = innerOrig
+		}
+
+		// Use suitable tracing method for open and closed paths
+		var traceMethod = false
+		if (innerOrig.closed || innerOrig.type != undefined) traceMethod = true
+
+		// The boolean operation
+		var newEl = inner.intersect(mask, {trace: traceMethod})
 
 		// If there are more than one resulting item, they are forced to have color so that later boolean operations will work
 		if (newEl.hasChildren()) {
@@ -75,13 +103,12 @@ function flattenClipping(clipGroup) {
 		// clean up
 		mask.remove()
 		inner.remove()
+		innerOrig.remove()
 	}
 	
-	
-	// ungroup(innerLayers)
-
-	//clean up
-	clipMask[0].remove()
+	//clean up	
+	clipMask.remove()
+	clipMaskOrig.remove()
 	clipGroup.clipped = false
 
 }
@@ -144,9 +171,11 @@ function render() {
 		var sub = d.subtract(b, {trace: traceMethod});
 
 		// Set color attributes
-		sub.strokeColor = 'black'
-		sub.strokeWidth = 1
-		sub.fillColor = null
+		if (!c.originalColors) {
+			sub.strokeColor = 'black'
+			sub.strokeWidth = 1
+			sub.fillColor = null
+		}
 
 		// If layer is a solid shape
 		if (d.closed || d.type != undefined) {
@@ -170,11 +199,13 @@ function render() {
 
 // UI listeners ================================================
 addListener('lineWidthThreshold')
+addListener('originalColors', 'checkbox')
 
 function addListener(elId, type) {
 	document.getElementById(elId).onchange = function() {
 
 	if (type == null) eval('c.' + elId + ' = this.value')
+	if (type == 'checkbox') eval('c.' + elId + ' = this.checked');
   }
 }
 
@@ -196,6 +227,7 @@ var  projectExportButton = document.getElementById('log-project')
 
 projectExportButton.addEventListener("click", function(e) {
 	console.log(project)
+	console.log(c)
 }, false)
 
 
@@ -224,7 +256,6 @@ function onDocumentDrop(event) {
 				//let's ungroup imported SVG for easier access. Now paths are bare at words layer.
 				pathImg.parent.insertChildren(pathImg.index,  pathImg.removeChildren())
 				pathImg.remove()
-				// flattenClipping(drawingLayer)
 				ungroup(drawingLayer)
 				render()
 			})
