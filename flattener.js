@@ -25,11 +25,13 @@ function ungroup(item) {
 	for (var i = 0; i < item.children.length; i++) {
 		var el = item.children[i]
 
-		if (el.hasChildren()) {
+		// If item is a group –– don't process clipping compound paths
+		if (el.hasChildren() && !el.clipMask) {
 			
 			// Have to deal with clipping groups first
 			if (el.clipped) flattenClipping(el)
 
+			// Move children to parent element and remove the group
 			el.parent.insertChildren(el.index, el.removeChildren())
 			el.remove()
 			flag = false
@@ -78,6 +80,9 @@ function flattenClipping(clipGroup) {
 	for (var x = 0; x < innerLayers.length; x++) {
 		var innerOrig = innerLayers[x]
 		var mask = clipMask.clone()
+		let origFill = innerOrig.fillColor
+		let origStrokeColor = innerOrig.strokeColor
+		let origStrokeWidth = innerOrig.strokeWidth
 
 		// if inner element is a shape, let's convert to a path first
 		// this is ugly but didn't yet find other way to prevent extra elements from generating
@@ -95,9 +100,11 @@ function flattenClipping(clipGroup) {
 		// The boolean operation
 		var newEl = inner.intersect(mask, {trace: traceMethod})
 
-		// If there are more than one resulting item, they are forced to have color so that later boolean operations will work
-		if (newEl.hasChildren()) {
-			newEl.children.forEach(el => el.fillColor = 'black')
+		// If the result is a compound path, restore original appearance after boolean operation	
+		if (newEl instanceof CompoundPath) {
+			newEl.children.forEach(el => el.fillColor = origFill)
+			newEl.children.forEach(el => el.strokeColor = origStrokeColor)
+			newEl.children.forEach(el => el.strokeWidth = origStrokeWidth)
 		}
 
 		// clean up
@@ -168,7 +175,7 @@ function render() {
 		resultLayer.addChild(d)
 
 		// Subtract everything above from the processed element
-		var sub = d.subtract(b, {trace: traceMethod});
+		var sub = d.subtract(b, {trace: traceMethod})
 
 		// Set color attributes
 		if (!c.originalColors) {
