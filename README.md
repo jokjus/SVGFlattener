@@ -2,6 +2,8 @@
 Flattens / hides elements behind other elements in an svg for pen plotting.
 Supports nested groupings and clipping masks.
 
+![Screenshot of SVGFlattener](/img/screenshot3.png)
+
 ## Usage
 1. Download
 2. Run in a browser (for example with Visual Code Live Server plugin)
@@ -18,6 +20,8 @@ Supports nested groupings and clipping masks.
 - Can handle compound paths as clipping masks 
 - Can properly flatten lines
 
-![Screenshot of SVGFlattener](/img/screenshot3.png)
+## Known bugs
+- Page size in the end result might be wrong. So even if you wouldn't see anything rendered on screen after processing is completed, export and check the result in vector editor of your choice.
+
 ![Example flattened image 1](/img/screenshot1.png)
 ![Example flattened image 2](/img/screenshot2.png)
