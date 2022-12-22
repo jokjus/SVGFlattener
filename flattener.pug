@@ -12,14 +12,14 @@ body
 	
 	.ui-panel
 		.ui-section
-			+header('Lines')
+			+header('SVG Flattener')
 			.ui-component
-				+field('lineWidthThreshold', 'Line expand threshold', 1, 'number', 0, 100)
-				+field('originalColors', 'Original colors', false, 'checkbox')
+				+field('lineWidthThreshold', 'Expand lines threshold', 1, 'number', 0, 100)
+				+field('originalColors', 'Keep original colors', false, 'checkbox')
 
 		.ui-section
-			+header('Project')
-			+button('log-project', 'Log project', '')
+			+header('Export')
+			//- +button('log-project', 'Log project', '')
 			+button('export-button', 'Export as SVG', '')
 	
 	canvas#canvas(resize='')

@@ -230,12 +230,12 @@ exportButton.addEventListener("click", function(e) {
 
 // Log project ========================================================
 
-var  projectExportButton = document.getElementById('log-project')
+// var  projectExportButton = document.getElementById('log-project')
 
-projectExportButton.addEventListener("click", function(e) {
-	console.log(project)
-	console.log(c)
-}, false)
+// projectExportButton.addEventListener("click", function(e) {
+// 	console.log(project)
+// 	console.log(c)
+// }, false)
 
 
 // DRAG'N DROP custom images =========================================
