@@ -26,7 +26,7 @@ function ungroup(item) {
 		var el = item.children[i]
 
 		// If item is a group –– don't process clipping compound paths
-		if (el.hasChildren() && !el.clipMask) {
+		if (el.hasChildren() && !el.clipMask && !el instanceof paper.CompoundPath ) {
 			
 			// Have to deal with clipping groups first
 			if (el.clipped) flattenClipping(el)
@@ -167,15 +167,16 @@ function render() {
 		if (el.closed == false && el.strokeWidth > c.lineWidthThreshold) {
 			d = PaperOffset.offsetStroke(el, el.strokeWidth / 2, { cap: el.strokeCap, join: el.strokeJoin })
 		}
-
-		var traceMethod = false
-		if (d.closed || d.type != undefined) traceMethod = true
+		
+		var traceMethod = d.closed || d.type != undefined ? true : false
+		
 
 		// add processed clone into the result layer
 		resultLayer.addChild(d)
 
+
 		// Subtract everything above from the processed element
-		var sub = d.subtract(b, {trace: traceMethod})
+		sub = d.subtract(b, {trace: traceMethod}) 
 
 		// Set color attributes
 		if (!c.originalColors) {
