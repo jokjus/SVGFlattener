@@ -1,32 +1,48 @@
-// SVG Flattener for pen plotting by Jussi Jokinen 2022
+// SVG Flattener for pen plotting by Jussi Jokinen 2022-2023
 // Removes overlapping lines. 
 // Open paths with stroke width above set threshold are expanded
-// Requires ungrouping svg first
 
-var c = {
+
+let c = {
 	lineWidthThreshold: 1,
-	originalColors: false
+	originalColors: false,
+	cookieCutter: false,
+	verbose: false
 }
-
-var drawingLayer = new Layer({
+	
+let drawingLayer = new Layer({
 	name: 'drawing'
 })
 
-var resultLayer = new Layer({
+let resultLayer = new Layer({
 	name: 'result'
+})
+
+// create a dummy path
+let b = new Path({
+	name: 'unitedSprites',
+	parent: resultLayer
 })
 
 
 // Recursively ungroup the SVG
-function ungroup(item) {
+function ungroup(item, keepCompounds = true) {
 
 	flag = true
 
 	for (var i = 0; i < item.children.length; i++) {
 		var el = item.children[i]
 
-		// If item is a group –– don't process clipping compound paths
-		if (el.hasChildren() && !el.clipMask && !el instanceof paper.CompoundPath ) {
+		// If item is a group
+		if ( el.hasChildren() ) {
+
+			// don't process clipping compound paths
+			// if (el.clipMask && el instanceof paper.CompoundPath ) {
+			// 	continue
+			// }
+			if (el instanceof paper.CompoundPath && el.closed && keepCompounds) {
+					continue
+			}
 			
 			// Have to deal with clipping groups first
 			if (el.clipped) flattenClipping(el)
@@ -120,94 +136,202 @@ function flattenClipping(clipGroup) {
 
 }
 
-
-
+// Do the hidden line removal
 function render() {
+	drawingLayer.opacity = 0.1 // show a hint of original drawing
 	var elCount = drawingLayer.children.length
 
-	// create a dummy path
-	 var b = new Path({
-		name: 'unitedSprites'
-	})
+	// setup progress indicator
+	viewWidth = view.bounds.width - 160
+	progIndicator = document.getElementById('progress')
+	progIndicatorStep = viewWidth / elCount
 	
-	// add dummy to result layer
-	resultLayer.addChild(b)
-	
+	// Initialize counter
+	var x = elCount - 1
+
 	// Loop through all elements in svg
-	for (var x = elCount - 1; x >= 0; x-- ) {
-		
-		console.log('processed: ' + (elCount - x) + ' of ' + elCount)
+	function loop() {
 
-		// take a clone of a current sprite
+		if (c.verbose) console.log('processed: ' + (elCount - x) + ' of ' + elCount)
+		
 		var el = drawingLayer.children[x]
+	
+		// use variables instead of accessing properties for possible speed advantage
+		fillC = el.fillColor
+		strokeC = el.strokeColor
+		strokeW = el.strokeWidth
+		closed = el.closed
+		validEl = true
 		
+		// stray point object with fill but no dimensions
 		if (el.bounds.height == 0 && el.bounds.width == 0) {
-			continue
-			// stray point object with fill but no dimensions
+			validEl = false
 		}
 		
-		if (el.fillColor == null && el.strokeColor == null) {
-			continue
-			//invisible object, no need to process
-		}
-
-		var d = el.clone()
-
-		// If there are lines with fillcolor applied, close them
-		if (el.fillColor != null && el.closed == false) {
-			d.closePath()
-		}
-
-		// If element is a shape (circle, ellipse, rectangle…), let's convert it to path first
-		if (d.type != undefined) {
-			d = d.toPath()
+		//invisible object, no need to process
+		if (fillC == null && strokeC == null) {
+			validEl = false
 		}
 		
-		// If element is a stroke with a wider than threshold width, expand it
-		if (el.closed == false && el.strokeWidth > c.lineWidthThreshold) {
-			d = PaperOffset.offsetStroke(el, el.strokeWidth / 2, { cap: el.strokeCap, join: el.strokeJoin })
-		}
+		// If element is to be processed
+		if (validEl) {
+
+			// take a clone of a current sprite
+			var d = el.clone()
+			
+			// If element is a shape (circle, ellipse, rectangle…), let's convert it to path first
+			if (d.type != undefined) {
+				if (c.verbose) console.log('Processed elem is a SHAPE')
+				d = d.toPath()
+			}
+
+			// If there are lines with fillcolor applied, close them (these are visually filled areas so we assume they should be processed as such)
+			if (fillC != null && closed == false) {
+				d.closePath()
+			}		
 		
-		var traceMethod = d.closed || d.type != undefined ? true : false
+			// If element is a stroke with a wider than threshold width, expand it
+			if (closed == false && strokeW > c.lineWidthThreshold) {
+				d = PaperOffset.offsetStroke(el, strokeW / 2, { cap: el.strokeCap, join: el.strokeJoin })
+			}
 		
+			// If cookie cutter option is not selected
+			if (!c.cookieCutter && d.closed) {
 
-		// add processed clone into the result layer
-		resultLayer.addChild(d)
+			
+				
+				// Let's stash the original element in order to add it to the global mask
+				fi = d.clone()
+				
+				// Compound paths need to be processed one sub-path at a time
+				if (d instanceof paper.CompoundPath) {
+					if (c.verbose) console.log('compound path being processed')
+		
+					temp = [...d.children]
+					d.parent.addChildren(d.children)
+		
+					// Subtract the mask from each compound path's sub-path individually
+					temp.forEach((path, idx, array) => {
+						
+						path.splitAt(path.length * Math.random())						
+						subtractAndUnite(path, false)	
+						
+					})
+					
+					// Update global mask after all sub-paths have been processed first
+					b = b.unite(fi, {insert: false})
+					fi.remove()
+		
+				}
 
+				else {
+					// Other than compound closed paths are processed one by one
+					d.splitAt(d.length * Math.random())	
+					subtractAndUnite(d, fi)
+				}
+			}
 
-		// Subtract everything above from the processed element
-		sub = d.subtract(b, {trace: traceMethod}) 
-
-		// Set color attributes
-		if (!c.originalColors) {
-			sub.strokeColor = 'black'
-			sub.strokeWidth = 1
-			sub.fillColor = null
+			// If cookie cutter option IS selected
+			else {
+				
+				if (d.closed) subtractAndUnite(d, d)
+				else subtractAndUnite(d, false)
+				
+			}
 		}
 
-		// If layer is a solid shape
-		if (d.closed || d.type != undefined) {
-			// Unite to previous solid shapes
-			b = b.unite(d, {insert: false})
-		}
+		x--
 
-		//remove temporary clone
-		d.remove()		
+		// Check if the loop should continue
+		if (x >= 0) {
+
+			// Only update visual progress once per 20 elements in order to speed things up
+			if (x % 20 == 0) {
+
+				// Update progress bar width
+				progWidth = viewWidth - (progIndicatorStep * x)
+				progIndicator.style.width = progWidth + 'px';
+				setTimeout(loop, 0)
+				
+			}
+			else {
+				loop()
+			}
+
+		} else {
+			// Loop finished, perform cleanup
+			
+			if (c.verbose) console.log('DONE, cleanup')
+	
+			b = new Path({
+				name: 'unitedSprites'
+			})
+
+			// Reverse order
+			resultLayer.reverseChildren()
+			// Ungroup possible resulted compound paths
+			ungroup(resultLayer, false)		
+			// Remove original paths
+			drawingLayer.removeChildren()
+
+			// Clean possible stray points from the result
+			resultLayer.children.forEach(path => {
+				if (path.bounds.height == 0 && path.bounds.width == 0) {
+					path.remove()
+				}
+			})
+			
+			// Set color attributes
+			if (!c.originalColors) {
+				resultLayer.strokeColor = 'black'
+				resultLayer.strokeWidth = 1
+				resultLayer.fillColor = null
+			}
+		}
+  }
+
+  // Start the loop
+  loop()
+			
+}
+			
+
+function subtractAndUnite(pathToProcess, toUnite = false) {
+
+	var traceMethod = pathToProcess.closed || pathToProcess.type != undefined ? true : false
+
+	// add processed clone into the result layer
+	resultLayer.addChild(pathToProcess)
+
+	// Subtract everything above from the processed element
+	res = pathToProcess.subtract(b, {trace: traceMethod}) 	
+	
+	// If layer is a solid shape
+	if (toUnite) {		
+
+		// Unite to previous solid shapes
+		b = b.unite(toUnite, {insert: false})
+		toUnite.remove()
 	}
 
-	// Clean up
-	b.remove()
-	resultLayer.children['unitedSprites'].remove()
-	drawingLayer.removeChildren()
+	//remove temporary clone
+	pathToProcess.remove()		
 
-	// Reverse order
-	resultLayer.reverseChildren()
+	if (!c.originalColors) {
+		res.strokeColor = 'black'
+		res.strokeWidth = 1
+		res.fillColor = null
+	}
+
+	return res
 }
+
 
 
 // UI listeners ================================================
 addListener('lineWidthThreshold')
 addListener('originalColors', 'checkbox')
+addListener('cookieCutter', 'checkbox')
 
 function addListener(elId, type) {
 	document.getElementById(elId).onchange = function() {
@@ -252,6 +376,8 @@ function onDocumentDrop(event) {
 		
 		drawingLayer.removeChildren()
 		resultLayer.removeChildren()
+		document.getElementById('progress').setAttribute('style', 'width:0px');
+
 		drawingLayer.activate()
 
 		var file = event.dataTransfer.files[0]
@@ -265,6 +391,11 @@ function onDocumentDrop(event) {
 				pathImg.parent.insertChildren(pathImg.index,  pathImg.removeChildren())
 				pathImg.remove()
 				ungroup(drawingLayer)
+				drawingLayer.fitBounds(view.bounds)
+				drawingLayer.scale(0.9)
+
+				if (c.verbose) console.log(drawingLayer)
+
 				render()
 			})
 		}

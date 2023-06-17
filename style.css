@@ -39,3 +39,12 @@ canvas[resize] {
 	border: 1px solid #0f9869;
 	right: 0;
 }
+
+#progress {
+	position: absolute;
+	top: 0;
+	left: 160px;
+	background-color:mediumseagreen;
+	height: 5px;
+	width: 0px;
+}
