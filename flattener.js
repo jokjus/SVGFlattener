@@ -213,7 +213,7 @@ function render() {
 					// Subtract the mask from each compound path's sub-path individually
 					temp.forEach((path, idx, array) => {
 						
-						path.splitAt(path.length * Math.random())						
+						path.splitAt(path.firstSegment.location)						
 						subtractAndUnite(path, false)	
 						
 					})
@@ -226,7 +226,7 @@ function render() {
 
 				else {
 					// Other than compound closed paths are processed one by one
-					d.splitAt(d.length * Math.random())	
+					d.splitAt(d.firstSegment.location)
 					subtractAndUnite(d, fi)
 				}
 			}
