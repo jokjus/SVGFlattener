@@ -192,7 +192,7 @@ function render() {
 		
 			// If element is a stroke with a wider than threshold width, expand it
 			if (closed == false && strokeW > c.lineWidthThreshold) {
-				d = PaperOffset.offsetStroke(el, strokeW / 2, { cap: el.strokeCap, join: el.strokeJoin })
+				d = PaperOffset.offsetStroke(el, strokeW, { cap: el.strokeCap, join: el.strokeJoin })
 			}
 		
 			// If cookie cutter option is not selected
