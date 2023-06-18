@@ -5,7 +5,7 @@ Supports nested groupings and clipping masks.
 ![Screenshot of SVGFlattener](/img/screenshot3.png)
 
 ## Usage
-1. Download
+1. Download or go to [SVGFlattener](https://jokjus.github.io/SVGFlattener/)
 2. Run in a browser (for example with Visual Code Live Server plugin)
 3. Set parameters from left side menu bar
 4. Drag an SVG file to flatten over green area on the screen.
