@@ -14,7 +14,7 @@ body {
 /* Scale canvas with resize attribute to full size */
 canvas[resize] {
 	margin-left: 160px;
-    width: 100%;
+    width: calc(100vw - 160px);
     height: 100%;
 	z-index: 1000;
 }

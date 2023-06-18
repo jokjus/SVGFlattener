@@ -142,7 +142,7 @@ function render() {
 	var elCount = drawingLayer.children.length
 
 	// setup progress indicator
-	viewWidth = view.bounds.width - 160
+	viewWidth = view.bounds.width
 	progIndicator = document.getElementById('progress')
 	progIndicatorStep = viewWidth / elCount
 	
@@ -197,9 +197,7 @@ function render() {
 		
 			// If cookie cutter option is not selected
 			if (!c.cookieCutter && d.closed) {
-
 			
-				
 				// Let's stash the original element in order to add it to the global mask
 				fi = d.clone()
 				
@@ -253,8 +251,7 @@ function render() {
 				progIndicator.style.width = progWidth + 'px';
 				setTimeout(loop, 0)
 				
-			}
-			else {
+			} else {
 				loop()
 			}
 
@@ -269,8 +266,10 @@ function render() {
 
 			// Reverse order
 			resultLayer.reverseChildren()
+
 			// Ungroup possible resulted compound paths
 			ungroup(resultLayer, false)		
+
 			// Remove original paths
 			drawingLayer.removeChildren()
 
@@ -280,13 +279,26 @@ function render() {
 					path.remove()
 				}
 			})
+
+			
+			
+			if (c.originalColors) {
+				resultLayer.children.forEach(path => {
+					if (path.strokeColor === null) {						
+						path.strokeColor = path.fillColor
+					}
+					path.fillColor = null
+					path.strokeWidth = 1
+				})
+			}
 			
 			// Set color attributes
 			if (!c.originalColors) {
 				resultLayer.strokeColor = 'black'
-				resultLayer.strokeWidth = 1
 				resultLayer.fillColor = null
+				resultLayer.strokeWidth = 1
 			}
+
 		}
   }
 
@@ -305,6 +317,13 @@ function subtractAndUnite(pathToProcess, toUnite = false) {
 
 	// Subtract everything above from the processed element
 	res = pathToProcess.subtract(b, {trace: traceMethod}) 	
+
+	// Give resulting compound path's subpaths a meaningful strokeColor (so they won't disappear when ungrouping)
+	if (res instanceof paper.CompoundPath) {
+		res.children.forEach(path => {
+			if (path.strokeColor == null) path.strokeColor = pathToProcess.fillColor
+		})
+	}
 	
 	// If layer is a solid shape
 	if (toUnite) {		
@@ -317,9 +336,14 @@ function subtractAndUnite(pathToProcess, toUnite = false) {
 	//remove temporary clone
 	pathToProcess.remove()		
 
+	res.strokeWidth = 1
+	
 	if (!c.originalColors) {
 		res.strokeColor = 'black'
-		res.strokeWidth = 1
+		res.fillColor = null
+	
+	} else {
+		if (res.strokeColor == null) res.strokeColor = res.fillColor
 		res.fillColor = null
 	}
 
