@@ -5,9 +5,10 @@
 
 let c = {
 	lineWidthThreshold: 1,
+	expandAllLines: false,
 	originalColors: false,
 	cookieCutter: false,
-	verbose: false
+	verbose: true
 }
 	
 let drawingLayer = new Layer({
@@ -155,10 +156,15 @@ function render() {
 		if (c.verbose) console.log('processed: ' + (elCount - x) + ' of ' + elCount)
 		
 		var el = drawingLayer.children[x]
+		
 	
 		// use variables instead of accessing properties for possible speed advantage
-		fillC = el.fillColor
-		strokeC = el.strokeColor
+		let fillC, strokeC
+
+		if (el.fillColor != null) fillC = el.fillColor.clone()
+		if (el.strokeColor != null) strokeC = el.strokeColor.clone()
+		origColor = strokeC == null ? fillC : strokeC
+
 		strokeW = el.strokeWidth
 		closed = el.closed
 		validEl = true
@@ -191,8 +197,14 @@ function render() {
 			}		
 		
 			// If element is a stroke with a wider than threshold width, expand it
-			if (closed == false && strokeW > c.lineWidthThreshold) {
-				d = PaperOffset.offsetStroke(el, strokeW, { cap: el.strokeCap, join: el.strokeJoin })
+			if (strokeW > c.lineWidthThreshold) {
+				// If all elements, including closed ones are to be expanded
+				if (c.expandAllLines) {
+					d = PaperOffset.offsetStroke(el, strokeW, { cap: el.strokeCap, join: el.strokeJoin })
+				}				
+				else {
+					if (!d.closed) d = PaperOffset.offsetStroke(el, strokeW, { cap: el.strokeCap, join: el.strokeJoin })
+				}
 			}
 		
 			// If cookie cutter option is not selected
@@ -212,7 +224,7 @@ function render() {
 					temp.forEach((path, idx, array) => {
 						
 						path.splitAt(path.firstSegment.location)						
-						subtractAndUnite(path, false)	
+						subtractAndUnite(path, false, origColor)	
 						
 					})
 					
@@ -225,7 +237,7 @@ function render() {
 				else {
 					// Other than compound closed paths are processed one by one
 					d.splitAt(d.firstSegment.location)
-					subtractAndUnite(d, fi)
+					subtractAndUnite(d, fi, origColor)
 				}
 			}
 
@@ -233,7 +245,7 @@ function render() {
 			else {
 				
 				if (d.closed) subtractAndUnite(d, d)
-				else subtractAndUnite(d, false)
+				else subtractAndUnite(d, false, origColor)
 				
 			}
 		}
@@ -308,20 +320,32 @@ function render() {
 }
 			
 
-function subtractAndUnite(pathToProcess, toUnite = false) {
+function subtractAndUnite(pathToProcess, toUnite = false, origColor) {
 
 	var traceMethod = pathToProcess.closed || pathToProcess.type != undefined ? true : false
 
 	// add processed clone into the result layer
 	resultLayer.addChild(pathToProcess)
 
+	// let origColor
+	// if (pathToProcess instanceof paper.CompoundPath) {
+	// 	origColor = pathToProcess.children[0].strokeColor.clone()
+	// }
+
 	// Subtract everything above from the processed element
 	res = pathToProcess.subtract(b, {trace: traceMethod}) 	
+	
+	// console.log('fillOfRes: '  + res.fillColor)
+	// console.log('strokeColOfRes: '  + res.strokeColor)
 
 	// Give resulting compound path's subpaths a meaningful strokeColor (so they won't disappear when ungrouping)
 	if (res instanceof paper.CompoundPath) {
+		// console.log('värejä säädetään')
 		res.children.forEach(path => {
-			if (path.strokeColor == null) path.strokeColor = pathToProcess.fillColor
+			if (path.strokeColor == null) {
+				path.strokeColor = origColor
+				// path.strokeColor = pathToProcess.fillColor
+			}
 		})
 	}
 	
@@ -343,7 +367,7 @@ function subtractAndUnite(pathToProcess, toUnite = false) {
 		res.fillColor = null
 	
 	} else {
-		if (res.strokeColor == null) res.strokeColor = res.fillColor
+		if (res.strokeColor == null) res.strokeColor = origColor
 		res.fillColor = null
 	}
 
@@ -356,6 +380,7 @@ function subtractAndUnite(pathToProcess, toUnite = false) {
 addListener('lineWidthThreshold')
 addListener('originalColors', 'checkbox')
 addListener('cookieCutter', 'checkbox')
+addListener('expandAllLines', 'checkbox')
 
 function addListener(elId, type) {
 	document.getElementById(elId).onchange = function() {
