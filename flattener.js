@@ -1,7 +1,7 @@
 // SVG Flattener for pen plotting by Jussi Jokinen 2022-2023
 // Removes overlapping lines. 
 // Open paths with stroke width above set threshold are expanded
-
+console.log('SVGFlattener by Jussi Jokinen')
 
 let c = {
 	lineWidthThreshold: 1,
@@ -22,7 +22,7 @@ let resultLayer = new Layer({
 // create a dummy path
 let b = new Path({
 	name: 'unitedSprites',
-	parent: resultLayer
+	parent: resultLayer,
 })
 
 
@@ -34,6 +34,8 @@ function ungroup(item, keepCompounds = true) {
 	for (var i = 0; i < item.children.length; i++) {
 		var el = item.children[i]
 
+		console.log(i)	
+
 		// If item is a group
 		if ( el.hasChildren() ) {
 
@@ -42,7 +44,8 @@ function ungroup(item, keepCompounds = true) {
 			// 	continue
 			// }
 			if (el instanceof paper.CompoundPath && el.closed && keepCompounds) {
-					continue
+				console.log('compound')	
+				continue
 			}
 			
 			// Have to deal with clipping groups first
@@ -244,7 +247,7 @@ function render() {
 			// If cookie cutter option IS selected
 			else {
 				
-				if (d.closed) subtractAndUnite(d, d)
+				if (d.closed) subtractAndUnite(d, d, origColor)
 				else subtractAndUnite(d, false, origColor)
 				
 			}
@@ -335,9 +338,6 @@ function subtractAndUnite(pathToProcess, toUnite = false, origColor) {
 	// Subtract everything above from the processed element
 	res = pathToProcess.subtract(b, {trace: traceMethod}) 	
 	
-	// console.log('fillOfRes: '  + res.fillColor)
-	// console.log('strokeColOfRes: '  + res.strokeColor)
-
 	// Give resulting compound path's subpaths a meaningful strokeColor (so they won't disappear when ungrouping)
 	if (res instanceof paper.CompoundPath) {
 		// console.log('värejä säädetään')
@@ -355,6 +355,11 @@ function subtractAndUnite(pathToProcess, toUnite = false, origColor) {
 		// Unite to previous solid shapes
 		b = b.unite(toUnite, {insert: false})
 		toUnite.remove()
+		// b.strokeColor = 'green'
+		// b.fillColor = null
+		// b.strokeWidth = 2
+		// b.bringToFront()
+		// b.parent = resultLayer
 	}
 
 	//remove temporary clone
@@ -367,6 +372,7 @@ function subtractAndUnite(pathToProcess, toUnite = false, origColor) {
 		res.fillColor = null
 	
 	} else {
+		console.log(origColor)
 		if (res.strokeColor == null) res.strokeColor = origColor
 		res.fillColor = null
 	}
@@ -428,17 +434,19 @@ function onDocumentDrop(event) {
 		document.getElementById('progress').setAttribute('style', 'width:0px');
 
 		drawingLayer.activate()
-
+		console.log('Clear canvas')
 		var file = event.dataTransfer.files[0]
 		var reader = new FileReader()
 
 		reader.onload = function (event) {
 			project.layers['drawing'].importSVG(event.target.result, function(item) {
+				console.log('Import SVG')
 				pathImg = item
 				pathImg.children[0].remove()
 				//let's ungroup imported SVG for easier access. Now paths are bare at words layer.
 				pathImg.parent.insertChildren(pathImg.index,  pathImg.removeChildren())
 				pathImg.remove()
+				console.log('Imported SVG, next ungroup')
 				ungroup(drawingLayer)
 				drawingLayer.fitBounds(view.bounds)
 				drawingLayer.scale(0.9)
