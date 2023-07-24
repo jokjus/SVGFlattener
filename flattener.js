@@ -8,7 +8,7 @@ let c = {
 	expandAllLines: false,
 	originalColors: false,
 	cookieCutter: false,
-	verbose: true
+	verbose: false
 }
 	
 let drawingLayer = new Layer({
@@ -34,8 +34,6 @@ function ungroup(item, keepCompounds = true) {
 	for (var i = 0; i < item.children.length; i++) {
 		var el = item.children[i]
 
-		console.log(i)	
-
 		// If item is a group
 		if ( el.hasChildren() ) {
 
@@ -43,8 +41,7 @@ function ungroup(item, keepCompounds = true) {
 			// if (el.clipMask && el instanceof paper.CompoundPath ) {
 			// 	continue
 			// }
-			if (el instanceof paper.CompoundPath && el.closed && keepCompounds) {
-				console.log('compound')	
+			if (el instanceof paper.CompoundPath && el.closed && keepCompounds) {				
 				continue
 			}
 			
@@ -372,7 +369,6 @@ function subtractAndUnite(pathToProcess, toUnite = false, origColor) {
 		res.fillColor = null
 	
 	} else {
-		console.log(origColor)
 		if (res.strokeColor == null) res.strokeColor = origColor
 		res.fillColor = null
 	}
@@ -434,19 +430,19 @@ function onDocumentDrop(event) {
 		document.getElementById('progress').setAttribute('style', 'width:0px');
 
 		drawingLayer.activate()
-		console.log('Clear canvas')
+		if (c.verbose) console.log('Clear canvas')
 		var file = event.dataTransfer.files[0]
 		var reader = new FileReader()
 
 		reader.onload = function (event) {
 			project.layers['drawing'].importSVG(event.target.result, function(item) {
-				console.log('Import SVG')
+				if (c.verbose) console.log('Import SVG')
 				pathImg = item
 				pathImg.children[0].remove()
 				//let's ungroup imported SVG for easier access. Now paths are bare at words layer.
 				pathImg.parent.insertChildren(pathImg.index,  pathImg.removeChildren())
 				pathImg.remove()
-				console.log('Imported SVG, next ungroup')
+				if (c.verbose) console.log('Imported SVG, next ungroup')
 				ungroup(drawingLayer)
 				drawingLayer.fitBounds(view.bounds)
 				drawingLayer.scale(0.9)
